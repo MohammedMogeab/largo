@@ -29,6 +29,7 @@ func newRootCmd(version, commit, date string) *cobra.Command {
     cmd.AddCommand(
         newVersionCmd(version, commit, date),
         newNewCmd(),
+        newServeCmd(),
     )
 
     return cmd
