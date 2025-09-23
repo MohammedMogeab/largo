@@ -8,7 +8,7 @@ import (
 
 	"github.com/MohammedMogeab/largo/internal/cli"
 )
-
+ 
 var (
 	// defaults shown when neither build info nor VERSION file are present
 	version = "dev"
