@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="largo.png" alt="LarGo Installer UI" width="800" />
+  <img src="largo_logo.png" alt="LarGo Installer UI" width="800" />
 
 Laravel‑style Go Web Framework — batteries included, DX first.
 
