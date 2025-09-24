@@ -14,8 +14,13 @@ Laravel‑style Go Web Framework — batteries included, DX first.
 - Generators for controllers, models, middleware, migrations
 
 **Install**
-- `go install github.com/MohammedMogeab/largo/cmd/largo@latest`
-- Or build from source: `go build ./cmd/largo`
+- Recommended (LarGo Installer — TUI):
+  - Repo: https://github.com/MohammedMogeab/largo-installer
+  - `go install github.com/MohammedMogeab/largo-installer/cmd/largo-installer@latest`
+  - Run: `largo-installer` (it sets PATH if needed and installs `largo`)
+  - Verify: open a new terminal, `largo version`
+- Direct install (advanced): `go install github.com/MohammedMogeab/largo/cmd/largo@latest`
+- From source (this repo): `go build ./cmd/largo`
 
 **Quickstart**
 - `largo new blog && cd blog`
@@ -51,5 +56,4 @@ Laravel‑style Go Web Framework — batteries included, DX first.
 **Build with version info**
 - `go build -ldflags "-X main.version=v0.1.0 -X main.commit=$(git rev-parse --short HEAD) -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" ./cmd/largo`
 
-— Made with Go. Feedback and contributions welcome.
-
+— Made with LarGo. Feedback and contributions welcome.
