@@ -48,7 +48,7 @@ func Logger() Middleware {
             if c.RequestID != "" {
                 attrs = append(attrs, slog.String("request_id", c.RequestID))
             }
-            c.Logger.Info("http_request", attrs...)
+            c.Logger.LogAttrs(c.R.Context(), slog.LevelInfo, "http_request", attrs...)
         }
     }
 }
