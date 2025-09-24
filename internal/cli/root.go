@@ -32,6 +32,8 @@ func newRootCmd(version, commit, date string) *cobra.Command {
         newServeCmd(),
         newMakeControllerCmd(),
         newMakeMigrationCmd(),
+        newMakeModelCmd(),
+        newMakeMiddlewareCmd(),
         newMigrateCmd(),
         newMigrateRollbackCmd(),
         newMigrateStatusCmd(),

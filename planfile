@@ -1,0 +1,91 @@
+LarGo Project Plan — Components and Responsibilities
+
+Overview
+- Purpose: Laravel-style Go web framework with a first-class CLI, app scaffolding, HTTP runtime, and migrations.
+- Module: github.com/MohammedMogeab/largo
+- Primary outputs: `largo` CLI and generated starter apps.
+
+CLI Commands (cmd/largo, internal/cli/*)
+- version (internal/cli/version.go)
+  Prints semantic version, commit, build date, and Go env.
+- new <app> (internal/cli/new.go)
+  Scaffolds a new app directory from embedded templates under internal/templates/app.
+  Flags: --module, --force
+- serve [target] (internal/cli/serve.go)
+  Dev-runner using `go run` for a generated app (default ./cmd/server). Propagates env and sets PORT/LARGO_ENV.
+  Flags: --port, --env
+- make:controller <Name> (internal/cli/make.go)
+  Generates a controller file in internal/handlers using a stub. Flags: --dir, --package, --force
+- make:model <Name> (internal/cli/make.go)
+  Generates a model struct in internal/models from stub. Flags: --dir, --package, --force
+- make:middleware <Name> (internal/cli/make.go)
+  Generates a middleware in internal/middleware from stub. Flags: --dir, --package, --force
+- make:migration <name> (internal/cli/make.go)
+  Creates a timestamped SQL migration file from stub. Flags: --dir, --force
+- migrate (internal/cli/migrate.go)
+  Applies all pending SQL migrations in a new batch. Creates schema_migrations table when missing.
+  Flags: --dir (default internal/db/migrations), --database-url (overrides DATABASE_URL)
+- migrate:rollback (internal/cli/migrate.go)
+  Rolls back the last applied batch of migrations (reverse lexicographic order). Same flags as migrate.
+- migrate:status (internal/cli/migrate.go)
+  Shows applied vs pending migrations by filename.
+
+Runtime Library (pkg/httpx)
+- context.go
+  Context struct with W, R, Logger, RequestID, Values; helpers JSON, Text, Error; Param(name) via chi.
+- router.go
+  Chi-backed router with exact and param routing, middleware chain, JSON 404/405 defaults.
+- middleware.go
+  Built-ins: RequestID (sets header and stores ID), Recover (panic-safe JSON 500, logs stack), Logger (method, path, status, bytes, duration, request_id).
+- responsewriter.go
+  Status recorder wrapper to capture status code and bytes for logging.
+- server.go
+  Serve(addr, h) with safe timeouts; ServeEnv(h) reads PORT (default 8080).
+
+Templates (internal/templates)
+- embed.go
+  Exposes embedded FS for templates: app/** and stubs/** for scaffolding and generators.
+- app/
+  - go.mod.tmpl: module for generated app.
+  - cmd/server/main.go.tmpl: wires httpx router, middlewares, routes (/, /hello/{name}).
+  - .env.example.tmpl: example PORT and DATABASE_URL.
+  - Makefile.tmpl, Dockerfile.tmpl, README.md.tmpl: basic developer ergonomics.
+  - internal/db/migrations/0001_create_users.sql.tmpl: example migration with -- up/-- down.
+- stubs/
+  - controller.go.tmpl: minimal HTTP handler type with Handle method.
+  - model.go.tmpl: minimal model struct with ID field.
+  - middleware.go.tmpl: http.Handler middleware scaffold.
+  - migration.sql.tmpl: migration skeleton with -- up/-- down sections.
+
+Versioning & Entry (cmd/largo/main.go)
+- deriveVersion reads Go build info (for `go install module@vX.Y.Z`) and falls back to VERSION file near the binary.
+- Passes version/commit/date into CLI root for `largo version` output.
+
+Dependencies (go.mod)
+- CLI & flags: github.com/spf13/cobra
+- Router: github.com/go-chi/chi/v5
+- Migrations (Postgres driver): github.com/jackc/pgx/v5 (stdlib driver)
+- Env loader: github.com/joho/godotenv
+
+Environment & Conventions
+- PORT: port for generated server; default 8080 (httpx.ServeEnv).
+- LARGO_ENV: environment for `serve` command (dev/prod/test string).
+- DATABASE_URL: Postgres DSN for migration commands (supports postgres:// and postgresql:// schemes).
+- Migrations directory: internal/db/migrations in generated apps. Files run in lexicographic order. Sections demarcated by `-- up` and `-- down`.
+
+Security Defaults
+- HTTP server timeouts and 1MB MaxHeaderBytes in httpx.Server.
+- Recover middleware returns JSON 500 and logs stack trace.
+- RequestID via header and response.
+
+What’s Implemented vs. Pending
+- Implemented: CLI (version, new, serve, make:controller, make:model, make:middleware, make:migration, migrate/rollback/status), httpx runtime (router, context, middleware, serve), embedded templates, starter app, Postgres migrations.
+- Pending (suggested next): config loader (typed structs, .env + env), request binding + validation, SQLite adapter for migrations, completions, packaging (GoReleaser + CI), docs site, examples.
+
+Quick Start (for a new user)
+- Build CLI: `go build ./cmd/largo`
+- Scaffold app: `largo new blog && cd blog`
+- Run server: `go run ./cmd/server` then curl :8080/
+- Configure DB: add DATABASE_URL to .env
+- Run migrations: `largo migrate` (then status/rollback as needed)
+

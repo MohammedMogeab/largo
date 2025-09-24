@@ -3,6 +3,9 @@ module github.com/MohammedMogeab/largo
 go 1.21
 
 require (
+	github.com/go-chi/chi/v5 v5.0.12
+	github.com/go-playground/validator/v10 v10.20.0
+	github.com/gorilla/schema v1.2.0
 	github.com/jackc/pgx/v5 v5.5.4
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.7.0

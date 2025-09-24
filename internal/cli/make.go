@@ -75,6 +75,70 @@ func newMakeMigrationCmd() *cobra.Command {
     return cmd
 }
 
+func newMakeModelCmd() *cobra.Command {
+    var (
+        outDir = "internal/models"
+        force  bool
+        pkg    string
+    )
+    cmd := &cobra.Command{
+        Use:   "make:model <Name>",
+        Short: "Generate a model struct in internal/models",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            name := strings.TrimSpace(args[0])
+            if name == "" {
+                return errors.New("model name is required")
+            }
+            if pkg == "" {
+                pkg = filepath.Base(outDir)
+            }
+            data := map[string]any{
+                "Name":    name,
+                "Package": pkg,
+            }
+            destFile := filepath.Join(outDir, toSnake(name)+".go")
+            return renderStub(cmd, "stubs/model.go.tmpl", destFile, data, force)
+        },
+    }
+    cmd.Flags().StringVar(&outDir, "dir", outDir, "Output directory for model")
+    cmd.Flags().StringVar(&pkg, "package", pkg, "Package name (default: dirname)")
+    cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite the file if it exists")
+    return cmd
+}
+
+func newMakeMiddlewareCmd() *cobra.Command {
+    var (
+        outDir = "internal/middleware"
+        force  bool
+        pkg    string
+    )
+    cmd := &cobra.Command{
+        Use:   "make:middleware <Name>",
+        Short: "Generate a middleware in internal/middleware",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            name := strings.TrimSpace(args[0])
+            if name == "" {
+                return errors.New("middleware name is required")
+            }
+            if pkg == "" {
+                pkg = filepath.Base(outDir)
+            }
+            data := map[string]any{
+                "Name":    name,
+                "Package": pkg,
+            }
+            destFile := filepath.Join(outDir, toSnake(name)+".go")
+            return renderStub(cmd, "stubs/middleware.go.tmpl", destFile, data, force)
+        },
+    }
+    cmd.Flags().StringVar(&outDir, "dir", outDir, "Output directory for middleware")
+    cmd.Flags().StringVar(&pkg, "package", pkg, "Package name (default: dirname)")
+    cmd.Flags().BoolVarP(&force, "force", "f", false, "Overwrite the file if it exists")
+    return cmd
+}
+
 func renderStub(cmd *cobra.Command, stubPath, dest string, data map[string]any, force bool) error {
     // Read template from embedded FS
     b, err := fs.ReadFile(templates.FS, stubPath)
@@ -140,4 +204,3 @@ func toSnake(s string) string {
     }
     return string(out)
 }
-

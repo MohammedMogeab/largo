@@ -1,26 +1,50 @@
 package main
 
 import (
-    "encoding/json"
-    "log"
     "net/http"
-    "os"
+
+    "github.com/MohammedMogeab/largo/pkg/config"
+    "github.com/MohammedMogeab/largo/pkg/httpx"
+    "github.com/MohammedMogeab/largo/pkg/httpx/binding"
+    "github.com/MohammedMogeab/largo/pkg/httpx/xerr"
 )
 
 func main() {
-    mux := http.NewServeMux()
-    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Content-Type", "application/json; charset=utf-8")
-        json.NewEncoder(w).Encode(map[string]string{"message": "Welcome to LarGo!"})
+    // Load configuration from .env/env/defaults
+    cfg := config.Load()
+
+    r := httpx.New()
+    r.Use(httpx.RequestID(), httpx.Recover(), httpx.Logger())
+
+    // Basic route
+    r.GET("/", func(c *httpx.Context) {
+        c.JSON(http.StatusOK, map[string]string{"message": "Welcome to LarGo!"})
     })
 
-    addr := ":8080"
-    if v := os.Getenv("PORT"); v != "" {
-        addr = ":" + v
+    // Example param route: GET /hello/{name}
+    r.GET("/hello/{name}", func(c *httpx.Context) {
+        c.JSON(http.StatusOK, map[string]string{"hello": c.Param("name")})
+    })
+
+    // Example POST with binding & validation
+    type Signup struct {
+        Email string `json:"email" validate:"required,email"`
+        Name  string `json:"name" validate:"required,min=2"`
     }
-    log.Printf("listening on %s", addr)
-    if err := http.ListenAndServe(addr, mux); err != nil {
-        log.Fatal(err)
+    r.Handle(http.MethodPost, "/signup", func(c *httpx.Context) {
+        var in Signup
+        if err := binding.BindJSON(c.R, &in); err != nil {
+            xerr.BadRequest(c.W, c.RequestID, "invalid JSON", nil)
+            return
+        }
+        if fields, _ := binding.Validate(in); len(fields) > 0 {
+            xerr.ValidationFailed(c.W, c.RequestID, fields)
+            return
+        }
+        c.JSON(http.StatusCreated, map[string]any{"ok": true})
+    })
+
+    if err := httpx.ServeConfig(cfg, r); err != nil {
+        panic(err)
     }
 }
-

@@ -1,0 +1,13 @@
+package {{ .Package }}
+
+import "net/http"
+
+// {{ .Name }} is an HTTP middleware.
+func {{ .Name }}(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // TODO: before next
+        next.ServeHTTP(w, r)
+        // TODO: after next
+    })
+}
+
